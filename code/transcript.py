@@ -8,9 +8,11 @@ driver = webdriver.Chrome(PATH)  # Make sure to have the latest chrome browser v
 driver.get(URL_for_transcript)
 time.sleep(10)  # Allows the page to load and update first, before the crawling begins
 
+
 def url_transcript_gen(video_url):
     # Converts a regular TedTalk url into the transcript equivalent. Make sure the original url is without additions.
     return video_url + "/transcript"
+
 
 def get_transcript():
     # Requires the driver to use the transcript video URL (helper function is provided)
@@ -28,6 +30,7 @@ def get_transcript():
             print("Parsing error in transcript. Full row is:", row)
             print("url is:", URL)
     return transcript_data
+
 
 def get_translations():
     # Requires the driver to use the transcript video URL
