@@ -23,4 +23,3 @@ class TedTalk:
 
     def dict(self):
         return dict((k, v) for k, v in self.__dict__.items())
-
