@@ -3,62 +3,85 @@ import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
 import time
+import csv
 
 # global tedTalk object array
 TED_TALKS = []
-TED_PAGES_TXT = "C:/Users/Noa/Desktop/huji/second year/dataMining/milestone1/code/ted_pages.txt"
-PATH = "C:/Users/Noa/Desktop/huji/second year/dataMining/milestone1/code/chromedriver.exe"  # Driver is uploaded on GitHub
+TED_PAGES_TXT_PATH = "C:/Users/Noa/Desktop/huji/second year/dataMining/milestone1/code/ted_pages.txt"
+DRIVER_PATH = "C:/Users/Noa/Desktop/huji/second year/dataMining/milestone1/code/chromedriver.exe"
+CSV_COLUMNS = ["video_url", "title", "description", "length", "views",
+               "upload_date", "related_tags", "translations", "speaker_name",
+               "speaker_profession", "full_transcript", "page_html"]
 
 
-# URL_for_transcript = "https://www.ted.com/talks/sir_ken_robinson_do_schools_kill_creativity/transcript?referrer=playlist-the_most_popular_talks_of_all"
-# URL = "https://www.ted.com/talks/amy_cuddy_your_body_language_may_shape_who_you_are?referrer=playlist-the_most_popular_talks_of_all&language=en"
+def write_csv():
+    csv_file = "most_viewed_talks.csv"
+    try:
+        with open(csv_file, 'w', newline='', encoding="utf-8") as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=CSV_COLUMNS)
+            writer.writeheader()
+            for data in TED_TALKS:
+                writer.writerow(data)
+    except IOError:
+        print("I/O error in creating CSV file")
+        with open("output.txt", 'w', encoding="utf-8") as file:
+            for data in TED_TALKS:
+                file.write(str(data))
 
 
-def create_talk(talk_url):
+def create_talk(url):
+    # init driver
+    # Make sure to have the latest chrome browser version,
+    # Adblock+, and chrome driver
+    driver = webdriver.Chrome(DRIVER_PATH)
+
+    try:
+        # driver for /transcript page
+        # Allows the page to load and update first, before the crawling begins
+        driver.get(url_transcript_gen(url))
+        time.sleep(8)
+        translation = get_translations(driver)
+        transcript = get_transcript(driver)
+
+        # driver for regular page
+        driver.get(url)
+        profession = get_profession(driver)
+    # except Exception:
+    #     raise Exception
+    finally:
+        # Closes the last chrome window opened. Disable for debugging purposes
+        driver.close()
+
     # init beautiful soup
-    page = requests.get(talk_url)
+    page = requests.get(url)
     bs = BeautifulSoup(page.text, 'html.parser')
 
-    # init driver
-    driver = webdriver.Chrome(
-        PATH)  # Make sure to have the latest chrome browser version, Adblock+, and chrome driver
+    try:
+        title = get_title(bs)
+        description = get_description(bs)
+        length = get_length(bs)
+        views = get_views(bs)
+        upload_date = get_upload_date(bs)
+        tags = get_related_tags(bs)
+        speaker_name = get_speaker(bs)
+    except Exception:
+        raise Exception
 
-    # driver for /transcript page
-    driver.get(url_transcript_gen(talk_url))
-    # Allows the page to load and update first, before the crawling begins
-    time.sleep(6)
-    translation = get_translations(driver)
-    transcript = get_transcript(driver)
-
-    # driver for regular page
-    driver.get(talk_url)
-    profession = get_profession(driver)
-
-    # Closes the last chrome window opened. Disable for debugging purposes
-    driver.close()
-
-    obj = Tt.TedTalk(
-        talk_url,
-        get_title(bs),
-        get_description(bs),
-        get_length(bs),
-        get_views(bs),
-        get_upload_date(bs),
-        get_related_tags(bs),
-        translation,
-        get_speaker(bs),
-        profession,
-        transcript,
-        bs.prettify()
-    )
-
+    # crete TedTalk object and append to list
+    obj = Tt.TedTalk(url, title, description, length, views, upload_date,
+                     tags, translation, speaker_name, profession, transcript,
+                     str(bs.prettify()))
     TED_TALKS.append(obj.dict())
 
 
 def get_title(bs):
     """returns the title of ted talk"""
-    s = bs.head.stripped_strings
-    return list(s)[0].split(": ")[1].split(" |")[0]
+    s = list(bs.head.stripped_strings)[0]
+    if ": " in s:
+        s = s.split(": ")[1]
+    if " |" in s:
+        s = s.split(" |")[0]
+    return s
 
 
 def get_description(bs):
@@ -130,10 +153,10 @@ def url_transcript_gen(video_url):
 
 
 if __name__ == "__main__":
-    with open(TED_PAGES_TXT) as f:
+    with open(TED_PAGES_TXT_PATH) as f:
         talks_urls = f.read().splitlines()
-        for talk_url in talks_urls[:1]:
+        for talk_url in talks_urls[:3]:
+            time.sleep(3)
             create_talk(talk_url)
 
-        
-        # todo: export TED_TALKS to csv file
+        write_csv()

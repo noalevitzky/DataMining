@@ -3,15 +3,15 @@
 class TedTalk:
     """representing a tedtalk and it's attributes"""
 
-    def __init__(self, url, title, description, length, num_views, date, related_tags,
-                 translations, speaker_name, speaker_profession,
-                 full_transcript, page_html):
-        self.url = url
+    def __init__(self, video_url, title, description, length, views,
+                 upload_date, related_tags, translations, speaker_name,
+                 speaker_profession, full_transcript, page_html):
+        self.video_url = video_url
         self.title = title
         self.description = description
         self.length = length
-        self.num_views = num_views
-        self.upload_date = date
+        self.views = views
+        self.upload_date = upload_date
         self.related_tags = related_tags
         self.translations = translations
         self.speaker_name = speaker_name
