@@ -1,34 +1,54 @@
 import TedTalk as Tt
 import requests
 from bs4 import BeautifulSoup
+from selenium import webdriver
+import time
 
 # global tedTalk object array
 TED_TALKS = []
+TED_PAGES_TXT = "C:/Users/Noa/Desktop/huji/second year/dataMining/milestone1/code/ted_pages.txt"
+PATH = "C:/Users/Noa/Desktop/huji/second year/dataMining/milestone1/code/chromedriver.exe"  # Driver is uploaded on GitHub
+
+
+# URL_for_transcript = "https://www.ted.com/talks/sir_ken_robinson_do_schools_kill_creativity/transcript?referrer=playlist-the_most_popular_talks_of_all"
+# URL = "https://www.ted.com/talks/amy_cuddy_your_body_language_may_shape_who_you_are?referrer=playlist-the_most_popular_talks_of_all&language=en"
 
 
 def create_talk(talk_url):
+    # init beautiful soup
     page = requests.get(talk_url)
     bs = BeautifulSoup(page.text, 'html.parser')
 
-    # todo: full_transcript
-    # todo: speaker_profession
-    # todo optional: num_languages (under Transcript page)
-    # todo optional: num_comments
-    # todo optional: location (TEDSummit, TED2019 (above related tags section)
+    # init driver
+    driver = webdriver.Chrome(
+        PATH)  # Make sure to have the latest chrome browser version, Adblock+, and chrome driver
+
+    # driver for /transcript page
+    driver.get(url_transcript_gen(talk_url))
+    # Allows the page to load and update first, before the crawling begins
+    time.sleep(6)
+    translation = get_translations(driver)
+    transcript = get_transcript(driver)
+
+    # driver for regular page
+    driver.get(talk_url)
+    profession = get_profession(driver)
+
+    # Closes the last chrome window opened. Disable for debugging purposes
+    driver.close()
+
     obj = Tt.TedTalk(
         talk_url,
         get_title(bs),
-        get_length(bs),
         get_description(bs),
+        get_length(bs),
         get_views(bs),
-        location,
         get_upload_date(bs),
         get_related_tags(bs),
-        num_languages,
-        num_comments,
+        translation,
         get_speaker(bs),
-        speaker_profession,
-        full_transcript,
+        profession,
+        transcript,
         bs.prettify()
     )
 
@@ -72,10 +92,48 @@ def get_related_tags(bs):
     return [tag.get("content") for tag in tags]
 
 
+def get_profession(dr):
+    # Requires the driver to use the main video URL
+    content = dr.find_element_by_css_selector("span.d\:b:nth-child(2)")
+    return content.text
+
+
+def get_translations(dr):
+    # Requires the driver to use the transcript video URL
+    content = dr.find_element_by_css_selector(".Form-input")
+    languages = content.text.splitlines()
+    return languages
+
+
+def get_transcript(dr):
+    # Requires the driver to use the transcript video URL
+    # (helper function is provided)
+    transcript_data = {}  # Formatted as {time: sentence}
+    content = dr.find_element_by_css_selector(".m-b\:7")
+    text_unparsed = content.find_elements_by_css_selector("div.Grid")
+    for line in text_unparsed:
+        row = line.text.strip().splitlines()
+        try:
+            timestamp = row[0]
+            text = row[1]
+            transcript_data[timestamp] = text
+        except IndexError:
+            print("Parsing error in transcript. Full row is:", row)
+            # print("url is:", talk_url)
+    return transcript_data
+
+
+def url_transcript_gen(video_url):
+    # Converts a regular TedTalk url into the transcript equivalent.
+    # Make sure the original url is without additions.
+    return video_url + "/transcript"
+
+
 if __name__ == "__main__":
-    with open("code/ted_pages.txt") as f:
-        talks_urls = f.readlines()
-        for talk_url in talks_urls:
+    with open(TED_PAGES_TXT) as f:
+        talks_urls = f.read().splitlines()
+        for talk_url in talks_urls[:1]:
             create_talk(talk_url)
 
+        
         # todo: export TED_TALKS to csv file
