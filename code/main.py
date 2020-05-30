@@ -149,17 +149,22 @@ def get_transcript(dr):
     # Requires the driver to use the transcript video URL
     # (helper function is provided)
     transcript_data = {}  # Formatted as {time: sentence}
-    content = dr.find_element_by_css_selector(".m-b\:7")
-    text_unparsed = content.find_elements_by_css_selector("div.Grid")
-    for line in text_unparsed:
-        row = line.text.strip().splitlines()
-        try:
-            timestamp = row[0]
-            text = row[1]
-            transcript_data[timestamp] = text
-        except IndexError:
-            print("Parsing error in transcript. Full row is:", row)
-    return transcript_data
+
+    try:
+        content = dr.find_element_by_css_selector(".m-b\:7")
+        text_unparsed = content.find_elements_by_css_selector("div.Grid")
+        for line in text_unparsed:
+            row = line.text.strip().splitlines()
+            try:
+                timestamp = row[0]
+                text = row[1]
+                transcript_data[timestamp] = text
+            except IndexError:
+                print("Parsing error in transcript list (Separating timestamp and text). Full row is:", row)
+    except common.exceptions.NoSuchElementException:
+        print("problem with transcript css selector at", dr.current_url)
+    finally:
+        return transcript_data
 
 
 def url_transcript_gen(video_url):
