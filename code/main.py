@@ -1,11 +1,10 @@
 import TedTalk as Tt
-import requests
-from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium import common
 import time
 import csv
 import math
+
 # global tedTalk object array
 TED_TALKS = []
 TED_PAGES_TXT_PATH = "C:/Users/NO1/PycharmProjects/milestone1/ted_pages.txt"
@@ -48,65 +47,82 @@ def create_talk(url):
         driver.get(url)
         profession = get_profession(driver)
         description = get_description(driver)
-
-    # except Exception:
-    #     raise Exception
-    finally:
-        # Closes the last chrome window opened. Disable for debugging purposes
-        # driver.close()
-        print(url)
-    time.sleep(3)
-    # init beautiful soup
-    page = requests.get(url)
-    bs = BeautifulSoup(page.text, 'html.parser')
-
-    try:
-        title = get_title(bs)
-        views = get_views(bs)
-        upload_date = get_upload_date(bs)
-        tags = get_related_tags(bs)
-        speaker_name = get_speaker(bs)
+        views = get_views(driver)
+        speaker_name = get_speaker(driver)
+        title = get_title(driver)
+        upload_date = get_upload_date(driver)
+        tags = get_related_tags(driver)
     except Exception:
         raise Exception
-    # html_str = str(bs.prettify())
+    finally:
+        print(url)
+
     html_str = None
     # create TedTalk object and append to list
     obj = Tt.TedTalk(url, title, description, length, views, upload_date,
                      tags, translation, speaker_name, profession, transcript, html_str)
     TED_TALKS.append(obj.dict())
 
-
-def get_title(bs):
+def get_title(dr):
     """returns the title of ted talk"""
-    if len(list(bs.head.stripped_strings)) == 0:
-        return None
-    else:
-        s = list(bs.head.stripped_strings)[0]
-        if ": " in s:
-            s = s.split(": ")[1]
-        if " |" in s:
-            s = s.split(" |")[0]
-        return s
 
-def get_views(bs):
-    s = bs.find(class_="main talks-main").stripped_strings
-    return list(s)[1].replace(",", "")
+    content = None
+    try:
+        content = driver.find_element_by_css_selector("h1.f-w\:700:nth-child(3)")
+    except common.exceptions.NoSuchElementException:
+        print("problem with title css selector at", dr.current_url)
+    finally:
+        return content.text if content is not None else content
 
-
-def get_speaker(bs):
-    t = bs.find_all("title")
-    return t[0].text.split(":")[0]
-
-
-def get_upload_date(bs):
-    """get upload date"""
-    date = bs.find_all("meta", itemprop="uploadDate")
-    return date[0].get("content")
+def get_views(dr):
+    views = None
+    try:
+        content = driver.find_element_by_css_selector(".css-1uodv95")
+        if content is not None:
+            views = content.text.replace(",", "")
+    except common.exceptions.NoSuchElementException:
+        print("problem with title css selector at", dr.current_url)
+    finally:
+        return views
 
 
-def get_related_tags(bs):
-    tags = bs.find_all("meta", property="og:video:tag")
-    return [tag.get("content") for tag in tags]
+def get_speaker(dr):
+    """returns the speaker of ted talk"""
+
+    content = None
+    try:
+        content = driver.find_element_by_css_selector("span.l-h\:t")
+    except common.exceptions.NoSuchElementException:
+        print("problem with title css selector at", dr.current_url)
+    finally:
+        return content.text if content is not None else content
+
+
+def get_upload_date(dr):
+    """returns the upload date of ted talk"""
+
+    content = None
+    try:
+        content = driver.find_element_by_css_selector("meta[itemprop='uploadDate']")
+    except common.exceptions.NoSuchElementException:
+        print("problem with title css selector at", dr.current_url)
+    finally:
+        return content.get_attribute("content") if content is not None else content
+
+
+def get_related_tags(dr):
+    # Requires the driver to use the transcript video URL
+
+    tags = []
+    try:
+        content = driver.find_elements_by_css_selector("meta[property='og:video:tag']")
+        if content:
+            for line in content:
+                tags.append(line.get_attribute("content"))
+    except common.exceptions.NoSuchElementException:
+        print("problem with related tags css selector at", dr.current_url)
+    finally:
+        return tags
 
 def get_description(dr):
     content = None
@@ -134,7 +150,8 @@ def get_translations(dr):
     languages = None
     try:
         content = driver.find_element_by_css_selector(".Form-input")
-        languages = content.text.splitlines()
+        if content:
+            languages = content.text.splitlines()
     except common.exceptions.NoSuchElementException:
         print("problem with translation css selector at", dr.current_url)
     finally:
