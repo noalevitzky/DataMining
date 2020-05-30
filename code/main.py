@@ -43,24 +43,25 @@ def create_talk(url):
         time.sleep(8)
         translation = get_translations(driver)
         transcript = get_transcript(driver)
+        length = get_length(driver)
         # driver for regular page
         driver.get(url)
         profession = get_profession(driver)
         description = get_description(driver)
+
     # except Exception:
     #     raise Exception
     finally:
         # Closes the last chrome window opened. Disable for debugging purposes
         # driver.close()
         print(url)
-    time.sleep(5)
+    time.sleep(3)
     # init beautiful soup
     page = requests.get(url)
     bs = BeautifulSoup(page.text, 'html.parser')
 
     try:
         title = get_title(bs)
-        length = get_length(bs)
         views = get_views(bs)
         upload_date = get_upload_date(bs)
         tags = get_related_tags(bs)
@@ -86,12 +87,6 @@ def get_title(bs):
         if " |" in s:
             s = s.split(" |")[0]
         return s
-
-
-def get_length(bs):
-    s = bs.find(class_="main talks-main").stripped_strings
-    return list(s)[3].replace("• ", "")
-
 
 def get_views(bs):
     s = bs.find(class_="main talks-main").stripped_strings
@@ -166,6 +161,15 @@ def get_transcript(dr):
     finally:
         return transcript_data
 
+def get_length(dr):
+
+    content = None
+    try:
+        content = driver.find_element_by_css_selector("span.f\:\.9:nth-child(1)")
+    except common.exceptions.NoSuchElementException:
+        print("problem with length css selector at", dr.current_url)
+    finally:
+        return content.text if content is not None else content
 
 def url_transcript_gen(video_url):
     # Converts a regular TedTalk url into the transcript equivalent.
@@ -179,7 +183,7 @@ if __name__ == "__main__":
         batch = 30
         total_parts = math.ceil(len(talks_urls)/batch)
 
-        for i in range(total_parts):
+        for i in range(3, total_parts):
             start = i * batch
             end = start + batch
             if end >= len(talks_urls):
