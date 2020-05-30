@@ -1,11 +1,11 @@
 from selenium import webdriver
 import time
 
-PATH = "C:/Users/NO1/PycharmProjects/milestone1/code/chromedriver.exe"  # Driver is uploaded on GitHub
-URL_for_transcript = "https://www.ted.com/talks/sir_ken_robinson_do_schools_kill_creativity/transcript?referrer=playlist-the_most_popular_talks_of_all"
-URL = "https://www.ted.com/talks/amy_cuddy_your_body_language_may_shape_who_you_are?referrer=playlist-the_most_popular_talks_of_all&language=en"
+PATH = "C:/Users/NO1/PycharmProjects/milestone1/chromedriver.exe"  # Driver is uploaded on GitHub
+URL_for_transcript = "https://www.ted.com/talks/robert_waldinger_what_makes_a_good_life_lessons_from_the_longest_study_on_happiness/transcript"
+URL = "https://www.ted.com/talks/simon_sinek_how_great_leaders_inspire_action"
 driver = webdriver.Chrome(PATH)  # Make sure to have the latest chrome browser version, Adblock+, and chrome driver
-driver.get(URL_for_transcript)
+driver.get(URL)
 time.sleep(6)  # Allows the page to load and update first, before the crawling begins
 
 
@@ -43,6 +43,12 @@ def get_profession():
     # Requires the driver to use the main video URL
     content = driver.find_element_by_css_selector("span.d\:b:nth-child(2)")
     return content.text
+
+def get_description():
+    content = driver.find_element_by_css_selector(".w\:3of4\@md > p:nth-child(1)")
+    return content.text
+
+print(get_description())
 
 # Closes the last chrome window opened. Disable for debugging purposes
 driver.close()
