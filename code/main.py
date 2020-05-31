@@ -7,16 +7,16 @@ import math
 
 # global tedTalk object array
 TED_TALKS = []
-TED_PAGES_TXT_PATH = "C:/Users/NO1/PycharmProjects/milestone1/ted_pages.txt"
-DRIVER_PATH = "C:/Users/NO1/PycharmProjects/milestone1/chromedriver.exe"
+TED_PAGES_TXT_PATH = "C:/Users/Noa/Desktop/huji/second year/dataMining/milestone1/code/ted_pages_unpopular.txt"
+DRIVER_PATH = "C:/Users/Noa/Desktop/huji/second year/dataMining/milestone1/code/chromedriver.exe"
 CSV_COLUMNS = ["video_url", "title", "description", "length", "views",
                "upload_date", "related_tags", "translations", "speaker_name",
                "speaker_profession", "full_transcript", "page_html"]
 driver = webdriver.Chrome(DRIVER_PATH)
 
 
-def write_csv(file_name):
-    csv_file = file_name + "_Top_Viewed.csv"
+def write_csv():
+    csv_file = "Least_Viewed_All.csv"
     try:
         with open(csv_file, 'w', newline='', encoding="utf-8") as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=CSV_COLUMNS)
@@ -43,6 +43,7 @@ def create_talk(url):
         translation = get_translations(driver)
         transcript = get_transcript(driver)
         length = get_length(driver)
+
         # driver for regular page
         driver.get(url)
         profession = get_profession(driver)
@@ -60,19 +61,23 @@ def create_talk(url):
     html_str = None
     # create TedTalk object and append to list
     obj = Tt.TedTalk(url, title, description, length, views, upload_date,
-                     tags, translation, speaker_name, profession, transcript, html_str)
+                     tags, translation, speaker_name, profession, transcript,
+                     html_str)
     TED_TALKS.append(obj.dict())
+
 
 def get_title(dr):
     """returns the title of ted talk"""
 
     content = None
     try:
-        content = driver.find_element_by_css_selector("h1.f-w\:700:nth-child(3)")
+        content = driver.find_element_by_css_selector(
+            "h1.f-w\:700:nth-child(3)")
     except common.exceptions.NoSuchElementException:
         print("problem with title css selector at", dr.current_url)
     finally:
         return content.text if content is not None else content
+
 
 def get_views(dr):
     views = None
@@ -103,11 +108,13 @@ def get_upload_date(dr):
 
     content = None
     try:
-        content = driver.find_element_by_css_selector("meta[itemprop='uploadDate']")
+        content = driver.find_element_by_css_selector(
+            "meta[itemprop='uploadDate']")
     except common.exceptions.NoSuchElementException:
         print("problem with title css selector at", dr.current_url)
     finally:
-        return content.get_attribute("content") if content is not None else content
+        return content.get_attribute(
+            "content") if content is not None else content
 
 
 def get_related_tags(dr):
@@ -115,7 +122,8 @@ def get_related_tags(dr):
 
     tags = []
     try:
-        content = driver.find_elements_by_css_selector("meta[property='og:video:tag']")
+        content = driver.find_elements_by_css_selector(
+            "meta[property='og:video:tag']")
         if content:
             for line in content:
                 tags.append(line.get_attribute("content"))
@@ -124,14 +132,17 @@ def get_related_tags(dr):
     finally:
         return tags
 
+
 def get_description(dr):
     content = None
     try:
-        content = dr.find_element_by_css_selector(".w\:3of4\@md > p:nth-child(1)")
+        content = dr.find_element_by_css_selector(
+            ".w\:3of4\@md > p:nth-child(1)")
     except common.exceptions.NoSuchElementException:
         print("problem with description css selector at", dr.current_url)
     finally:
         return content.text if content is not None else content
+
 
 def get_profession(dr):
     # Requires the driver to use the main video URL
@@ -157,6 +168,7 @@ def get_translations(dr):
     finally:
         return languages
 
+
 def get_transcript(dr):
     # Requires the driver to use the transcript video URL
     # (helper function is provided)
@@ -172,21 +184,25 @@ def get_transcript(dr):
                 text = row[1]
                 transcript_data[timestamp] = text
             except IndexError:
-                print("Parsing error in transcript list (Separating timestamp and text). Full row is:", row)
+                print(
+                    "Parsing error in transcript list (Separating timestamp and text). Full row is:",
+                    row)
     except common.exceptions.NoSuchElementException:
         print("problem with transcript css selector at", dr.current_url)
     finally:
         return transcript_data
 
-def get_length(dr):
 
+def get_length(dr):
     content = None
     try:
-        content = driver.find_element_by_css_selector("span.f\:\.9:nth-child(1)")
+        content = driver.find_element_by_css_selector(
+            "span.f\:\.9:nth-child(1)")
     except common.exceptions.NoSuchElementException:
         print("problem with length css selector at", dr.current_url)
     finally:
         return content.text if content is not None else content
+
 
 def url_transcript_gen(video_url):
     # Converts a regular TedTalk url into the transcript equivalent.
@@ -195,19 +211,23 @@ def url_transcript_gen(video_url):
 
 
 if __name__ == "__main__":
+    start_time = time.time()
+
     with open(TED_PAGES_TXT_PATH) as f:
         talks_urls = f.read().splitlines()
-        batch = 30
-        total_parts = math.ceil(len(talks_urls)/batch)
+        # batch = 30
+        # total_parts = math.ceil(len(talks_urls) / batch)
 
-        for i in range(3, total_parts):
-            start = i * batch
-            end = start + batch
-            if end >= len(talks_urls):
-                end = -1
-            for talk_url in talks_urls[start:end]:
-                create_talk(talk_url)
-            write_csv(str(start) + "-" + str(end))
-            time.sleep(15)
+        # for i in range(3, total_parts):
+        #     start = i * batch
+        #     end = start + batch
+        #     if end >= len(talks_urls):
+        #         end = -1
+        for i, talk_url in enumerate(talks_urls):
+            print("--- %s seconds ---" % (time.time() - start_time))
+            print(str(i), " ", talk_url)
+            create_talk(talk_url)
+        write_csv()
+        time.sleep(15)
 
         driver.quit()
