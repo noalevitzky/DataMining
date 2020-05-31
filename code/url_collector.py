@@ -7,14 +7,14 @@ cache = []
 
 def write_links():
     """writes caches TedTalk pages to file"""
-    try:
-        with open('code/ted_pages.txt', 'w') as file:
-            for item in cache:
-                file.write("%s\n" % item)
-    except:
-        print('ERROR in creating json')
-    finally:
-        file.close()
+    # try:
+    with open('ted_pages_unpopular(2).txt', 'w') as file:
+        for item in cache:
+            file.write("%s\n" % item)
+
+    # except:
+    #     print('ERROR in creating file')
+
 
 
 def get_link_tedpages(link):
@@ -37,16 +37,16 @@ def get_link_tedpages(link):
 if __name__ == "__main__":
     """ generates ted_pages.txt """
 
-    with open("code/links.txt") as f:
+    with open("links.txt") as f:
         links = f.read().splitlines()
         start_time = time.time()
 
         # todo we took top 13 pages, to be changed
-        for link in links[:13]:
+        for link in links[-13:-28:-1]:
             time.sleep(2)
             # Troubleshooting:
-            # print("--- %s seconds ---" % (time.time() - start_time))
-            # print(link)
+            print("--- %s seconds ---" % (time.time() - start_time))
+            print(link)
             get_link_tedpages(link)
 
         write_links()
