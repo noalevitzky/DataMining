@@ -155,7 +155,9 @@ if __name__ == "__main__":
         processed = process_content(tokenized, chunkPattern)
         phrases = extract_words(processed)
         phrases_freq = get_ordered_freq(phrases)
-        print(phrases_freq)
+        print("**** G ****\nnouns by freq:\n", phrases_freq, '\nnum of nouns: '
+              + str(len(phrases_freq)) + '\n') 
+        
         with open(NOUNS_PATH, 'w') as f:
             f.write(" ".join(phrases))
 
