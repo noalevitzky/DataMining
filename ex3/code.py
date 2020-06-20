@@ -10,8 +10,8 @@ import re
 
 # General
 plt.style.use('fivethirtyeight')
-FILE_PATH = 'C:/Users/Noa/Desktop/huji/second year/dataMining/ex3/theWoderfulWizardOfOz.txt'
-NOUNS_PATH = 'C:/Users/Noa/Desktop/huji/second year/dataMining/ex3/nouns.txt'
+FILE_PATH = 'C:/Users/NO1/PycharmProjects/DataMiningEx03/theWoderfulWizardOfOz.txt'
+NOUNS_PATH = 'C:/Users/NO1/PycharmProjects/DataMiningEx03/nouns.txt'
 porter = PorterStemmer()
 STOP_SIGNS = [',', '.', "'", '"', '`', ';', "''", '""', "``", ']', '[', '(',
               ')', ':', "?", "!"]
@@ -173,5 +173,4 @@ if __name__ == "__main__":
         print("**** H ****\nrepeated tokens (total " + str(len(repeated)) + "):")
         for i, line in enumerate(repeated):
             print(str(i+1) + ':', line)
-
 
