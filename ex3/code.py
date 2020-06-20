@@ -1,6 +1,6 @@
-import pandas
 import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 import numpy as np
 import nltk
 from nltk.stem import PorterStemmer
