@@ -2,6 +2,8 @@ import TedTalk as Tt
 from selenium import webdriver
 from selenium import common
 import time
+import pickle
+import os
 import csv
 import math
 
@@ -12,7 +14,7 @@ TED_TALKS = []
 POPULAR_URLS = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/popular_urls.txt'
 UNPOPULAR_URLS = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/unpopular_urls.txt'
 MIDDLE_URLS = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/middle_urls.txt'
-TEST_URL = 'https://www.ted.com/talks/bill_gates_how_we_must_respond_to_the_coronavirus_pandemic'
+TEST_URL = 'https://www.ted.com/talks/bill_gates_how_the_pandemic_will_shape_the_near_future'
 
 # driver & csv format
 DRIVER_PATH = "C:/Users/Noa/Desktop/huji/second year/dataMining/final project/code/chromedriver.exe"
@@ -22,25 +24,42 @@ CSV_COLUMNS = ["video_url", "title", "description", "length",
                "full_transcript"]
 driver = webdriver.Chrome(DRIVER_PATH)
 
+# pickle files
+POPULAR_PICKLE = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/popular_talks.p'
+MIDDLE_PICKLE = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/middle_talks.p'
+UNPOPULAR_PICKLE = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/unpopular_talks.p'
+TEST_PICKLE = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/check.p'
+
+""" **************** cur settings ! **************** """
+# peek cur pickle & url file
+CUR_PICKLE = UNPOPULAR_PICKLE
+CUR_URL = UNPOPULAR_URLS
+
+
 # CSV files
-POPULAR_CSV = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/popular_talks2.csv'
-UNPOPULAR_CSV = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/unpopular_talks4.csv'
-MIDDLE_CSV = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/middle_talks3.csv'
-TEST_CSV = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/check.csv'
+# POPULAR_CSV = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/popular_talks2.csv'
+# UNPOPULAR_CSV = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/unpopular_talks4.csv'
+# MIDDLE_CSV = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/middle_talks3.csv'
+# TEST_CSV = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/check.csv'
 
+# def write_csv():
+#     try:
+#         with open(UNPOPULAR_CSV, 'w', newline='', encoding="utf-8") as csvfile:
+#             writer = csv.DictWriter(csvfile, fieldnames=CSV_COLUMNS)
+#             writer.writeheader()
+#             for data in TED_TALKS:
+#                 writer.writerow(data)
+#     except IOError:
+#         print("I/O error in creating CSV file")
+#         with open("output.txt", 'w', encoding="utf-8") as file:
+#             for data in TED_TALKS:
+#                 file.write(str(data))
+#
 
-def write_csv():
-    try:
-        with open(UNPOPULAR_CSV, 'w', newline='', encoding="utf-8") as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=CSV_COLUMNS)
-            writer.writeheader()
-            for data in TED_TALKS:
-                writer.writerow(data)
-    except IOError:
-        print("I/O error in creating CSV file")
-        with open("output.txt", 'w', encoding="utf-8") as file:
-            for data in TED_TALKS:
-                file.write(str(data))
+def write_pickle():
+    with open(CUR_PICKLE, 'ab') as fp:
+        for data in TED_TALKS:
+            pickle.dump(data, fp, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 def create_talk(url):
@@ -76,7 +95,8 @@ def create_talk(url):
     obj = Tt.TedTalk(url, title, description, length, length_in_minutes, views,
                      upload_date, tags, translation, speaker_name, profession,
                      transcript)
-    TED_TALKS.append(obj.dict())
+    # TED_TALKS.append(obj.dict())
+    TED_TALKS.append(obj)
 
 
 def get_title(dr):
@@ -244,33 +264,33 @@ def url_transcript_gen(video_url):
 
 if __name__ == "__main__":
     start_time = time.time()
+    try:
+        with open(CUR_URL) as f:
+            talks_urls = f.read().splitlines()
 
-    with open(UNPOPULAR_URLS) as f:
-        talks_urls = f.read().splitlines()
+            # //
+            # batch = 30
+            # total_parts = math.ceil(len(talks_urls) / batch)
+            #
+            # for i in range(3, total_parts):
+            #     start = i * batch
+            #     end = start + batch
+            #     if end >= len(talks_urls):
+            #         end = -1
+            # //
 
-        # //
-        # batch = 30
-        # total_parts = math.ceil(len(talks_urls) / batch)
-        #
-        # for i in range(3, total_parts):
-        #     start = i * batch
-        #     end = start + batch
-        #     if end >= len(talks_urls):
-        #         end = -1
-        # //
+            for i, talk_url in enumerate(talks_urls[800:]):
+                print("--- %s seconds ---" % (time.time() - start_time))
+                print(str(i), " ", talk_url)
+                create_talk(talk_url)
 
-        for i, talk_url in enumerate(talks_urls[600:700]):
-            print("--- %s seconds ---" % (time.time() - start_time))
-            print(str(i), " ", talk_url)
-
-            create_talk(talk_url)
-
-        write_csv()
-        time.sleep(15)
-
-    driver.quit()
+    finally:
+        # write_csv()
+        write_pickle()
+        # time.sleep(15)
+        driver.quit()
 
 # --- test ---
 # create_talk(TEST_URL)
-# write_csv()
+# write_pickle()
 # driver.quit()

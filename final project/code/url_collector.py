@@ -4,16 +4,20 @@ import time
 
 LINKS_PATH = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/links.txt'
 POPULAR_URLS = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/popular_urls.txt'
-UNPOPULAR_URLS = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/unpopular_urls.txt'
+UNPOPULAR_URLS = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/unpopular_urls2.txt'
 MIDDLE_URLS = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/middle_urls.txt'
 
 cache = []
 
+""" **************** cur settings ! **************** """
+
+
+# peek cur url & dest file
 
 def write_links():
     """writes caches TedTalk pages to file"""
     # try:
-    with open(MIDDLE_URLS, 'w') as file:
+    with open(UNPOPULAR_URLS, 'w') as file:
         for item in cache:
             file.write("%s\n" % item)
 

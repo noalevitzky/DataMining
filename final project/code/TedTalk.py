@@ -21,3 +21,5 @@ class TedTalk:
     def dict(self):
         return dict((k, v) for k, v in self.__dict__.items())
 
+    def dict_without_transcript(self):
+        return dict((k, v) for k, v in self.__dict__.items() if k != 'full_transcript')
