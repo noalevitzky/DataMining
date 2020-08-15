@@ -54,12 +54,17 @@ CUR_URL = UNPOPULAR_URLS
 #         with open("output.txt", 'w', encoding="utf-8") as file:
 #             for data in TED_TALKS:
 #                 file.write(str(data))
-#
+
 
 def write_pickle():
+    """ writes new one. uncomment if needed """
+    # with open(CUR_PICKLE, 'wb') as fp:
+
+    """ append to existing"""
     with open(CUR_PICKLE, 'ab') as fp:
         for data in TED_TALKS:
             pickle.dump(data, fp, protocol=pickle.HIGHEST_PROTOCOL)
+
 
 
 def create_talk(url):

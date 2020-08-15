@@ -2,91 +2,32 @@ import pandas as pd
 import pickle
 import csv
 
+# original pickles from crawling
 POPULAR_PICKLE = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/popular_talks.p'
 MIDDLE_PICKLE = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/middle_talks.p'
 UNPOPULAR_PICKLE = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/unpopular_talks.p'
 TEST_PICKLE = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/check.p'
 
+# cleaned pickle
+CLEANED_POPULAR_PICKLE = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/cleaned_popular_talks.p'
+CLEANED_MIDDLE_PICKLE = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/cleaned_middle_talks.p'
+CLEANED_UNPOPULAR_PICKLE = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/cleaned_unpopular_talks.p'
+
+# cleaned csv
 CLEANED_POPULAR_CSV = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/cleaned_popular.csv'
 CLEANED_MIDDLE_CSV = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/cleaned_middle.csv'
 CLEANED_UNPOPULAR_CSV = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/cleaned_unpopular.csv'
 
-COLUMNS = ['video_url', 'title', 'description', 'length', 'length_in_minutes',
-           'views', 'upload_date', 'related_tags', 'translations',
-           'speaker_name', 'speaker_profession']
+COLUMNS_NO_TRANSCRIPT = ['video_url', 'title', 'description', 'length',
+                         'length_in_minutes', 'views', 'upload_date',
+                         'related_tags', 'translations', 'speaker_name',
+                         'speaker_profession']
 
-POPULAR, MIDDLE, UNPOPULAR = None, None, None
-
-
-# ******** CSV ********
-
-# popular_path = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/popular_talks_all.csv'
-# middle_path = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/middle_talks_all.csv'
-# unpopular_path = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/unpopular_talks_all.csv'
-
-# POPULAR = pd.read_csv(popular_path, usecols=CSV_COLUMNS)
-# MIDDLE = pd.read_csv(middle_path, usecols=CSV_COLUMNS)
-# UNPOPULAR = pd.read_csv(unpopular_path, usecols=CSV_COLUMNS)
-
-# DF_POPULAR = pd.DataFrame(POPULAR)
-# DF_MIDDLE = pd.DataFrame(MIDDLE)
-# DF_UNPOPULAR = pd.DataFrame(UNPOPULAR)
-# DF_TEST = pd.DataFrame(TEST)
-
-# CSV_COLUMNS = ["video_url", "title", "description", "length",
-#                "length_in_minutes", "views", "upload_date", "related_tags",
-#                "translations", "speaker_name", "speaker_profession",
-#                "full_transcript"]
-
-# def CSV_print_na_values(s):
-#     print(s + ' removal - rows with missing vals:\n')
-#     popular_data = DF_POPULAR.loc[DF_POPULAR.isna().values.any(axis=1)]
-#     middle_data = DF_MIDDLE.loc[DF_MIDDLE.isna().values.any(axis=1)]
-#     unpopular_data = DF_UNPOPULAR.loc[DF_UNPOPULAR.isna().values.any(axis=1)]
-#
-#     print('popular:\n', popular_data, '\n****\nmiddle:\n', middle_data,
-#           '\n****\nunpopular:\n', unpopular_data)
-#
-#
-# def CSV_remove_rows_with_missing_values():
-#     """remove empty cells"""
-#     DF_POPULAR.dropna(how='any', subset=['length', 'views', 'upload_date'],
-#                       axis=0, inplace=True)
-#     DF_MIDDLE.dropna(how='any', subset=['length', 'views', 'upload_date'],
-#                      axis=0, inplace=True)
-#     DF_UNPOPULAR.dropna(how='any', subset=['length', 'views', 'upload_date'],
-#                         axis=0, inplace=True)
-#
-#
-# def CSV_find_overflows():
-#     print('overflows:\n')
-#     popular_data = DF_POPULAR[
-#         DF_POPULAR['video_url'].str.contains('http', na=False) == False]
-#     middle_data = DF_MIDDLE[
-#         DF_MIDDLE['video_url'].str.contains('http', na=False) == False]
-#     unpopular_data = DF_UNPOPULAR[
-#         DF_UNPOPULAR['video_url'].str.contains('http', na=False) == False]
-#
-#     print('popular:\n', popular_data, '\n****\nmiddle:\n', middle_data,
-#           '\n****\nunpopular:\n', unpopular_data)
-#
-#
-# def CSV_validate_no_rows_without_transcript():
-#     print('num of rows without transcript:')
-#     print('POPULAR:',
-#           DF_POPULAR.loc[DF_POPULAR['full_transcript'] == '{}'].size)
-#     print('MIDDLE:',
-#           DF_MIDDLE.loc[DF_MIDDLE['full_transcript'] == '{}'].size)
-#     print('UNPOPULAR:',
-#           DF_UNPOPULAR.loc[DF_UNPOPULAR['full_transcript'] == '{}'].size)
-#
-
-# ******** END CSV ********
 
 def write_csv_without_transcript(dest, source):
     try:
         with open(dest, 'w', newline='', encoding="utf-8") as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=COLUMNS)
+            writer = csv.DictWriter(csvfile, fieldnames=COLUMNS_NO_TRANSCRIPT)
             writer.writeheader()
             for data in source:
                 writer.writerow(data.dict_without_transcript())
@@ -111,8 +52,8 @@ def remove_talks_without_transcript(lst):
 def create_df(lst):
     """ creates df without transcript """
     return pd.DataFrame(
-        [[getattr(i, j) for j in COLUMNS] for i in lst],
-        columns=COLUMNS)
+        [[getattr(i, j) for j in COLUMNS_NO_TRANSCRIPT] for i in lst],
+        columns=COLUMNS_NO_TRANSCRIPT)
 
 
 def process_pickle(url):
@@ -128,17 +69,13 @@ def process_pickle(url):
     return data
 
 
-if __name__ == '__main__':
-    # //
-    # prev - CSV
-    # CSV_find_overflows()
-    # # todo remove bill's interview
-    # CSV_print_na_values('BEFORE')
-    # CSV_remove_rows_with_missing_values()
-    # CSV_print_na_values('AFTER')
-    # CSV_validate_no_rows_without_transcript()
-    # //
+def write_pickle(p_file, lst):
+    with open(p_file, 'wb') as fp:
+        for data in lst:
+            pickle.dump(data, fp, protocol=pickle.HIGHEST_PROTOCOL)
 
+
+if __name__ == '__main__':
     """ data cleaning """
     # POPULAR
     print('POPULAR')
@@ -167,12 +104,20 @@ if __name__ == '__main__':
     UNPOPULAR = remove_talks_with_missing_values(UNPOPULAR)
     print('values:', len(UNPOPULAR))
 
-    """ reality check """
-
-    # export to CSV without transcript, after cleaning
+    # export to CSV without transcript
+    # export to pickle
     write_csv_without_transcript(CLEANED_POPULAR_CSV, POPULAR)
     write_csv_without_transcript(CLEANED_MIDDLE_CSV, MIDDLE)
     write_csv_without_transcript(CLEANED_UNPOPULAR_CSV, UNPOPULAR)
+    write_pickle(CLEANED_POPULAR_PICKLE, POPULAR)
+    write_pickle(CLEANED_MIDDLE_PICKLE, MIDDLE)
+    write_pickle(CLEANED_UNPOPULAR_PICKLE, UNPOPULAR)
+
+    print('\ncleaned popular:', len(process_pickle(CLEANED_POPULAR_PICKLE)))
+    print('cleaned middle:', len(process_pickle(CLEANED_MIDDLE_PICKLE)))
+    print('cleaned unpopular:', len(process_pickle(CLEANED_UNPOPULAR_PICKLE)))
+
+    """ reality check """
 
     # check for duplicates in crawling
 
