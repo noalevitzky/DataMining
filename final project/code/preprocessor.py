@@ -52,11 +52,11 @@ def remove_talks_without_transcript(lst):
     return [talk for talk in lst if len(talk.full_transcript.keys()) > 1]
 
 
-def create_df(lst):
+def create_df(lst, columns):
     """ creates df without transcript """
     return pd.DataFrame(
-        [[getattr(i, j) for j in COLUMNS_NO_TRANSCRIPT] for i in lst],
-        columns=COLUMNS_NO_TRANSCRIPT)
+        [[getattr(i, j) for j in columns] for i in lst],
+        columns=columns)
 
 
 def process_pickle(url):
@@ -78,53 +78,66 @@ def write_pickle(p_file, lst):
             pickle.dump(data, fp, protocol=pickle.HIGHEST_PROTOCOL)
 
 
-if __name__ == '__main__':
-    """ data cleaning """
-    POPULAR = process_pickle(POPULAR_PICKLE)
-    MIDDLE = process_pickle(MIDDLE_PICKLE)
-    UNPOPULAR = process_pickle(UNPOPULAR_PICKLE)
-
+def data_clean(popular, middle, unpopular):
     # write uncleaned csv
-    write_csv_without_transcript(UNCLEANED_POPULAR_CSV, POPULAR)
-    write_csv_without_transcript(UNCLEANED_MIDDLE_CSV, MIDDLE)
-    write_csv_without_transcript(UNCLEANED_UNPOPULAR_CSV, UNPOPULAR)
+    write_csv_without_transcript(UNCLEANED_POPULAR_CSV, popular)
+    write_csv_without_transcript(UNCLEANED_MIDDLE_CSV, middle)
+    write_csv_without_transcript(UNCLEANED_UNPOPULAR_CSV, unpopular)
 
     # POPULAR
-    print('POPULAR\noriginal: ', len(POPULAR))
-    POPULAR = remove_talks_without_transcript(POPULAR)
-    print('transcript:', len(POPULAR))
-    POPULAR = remove_talks_with_missing_values(POPULAR)
-    print('values:', len(POPULAR))
+    print('POPULAR\noriginal: ', len(popular))
+    popular = remove_talks_without_transcript(popular)
+    print('transcript:', len(popular))
+    popular = remove_talks_with_missing_values(popular)
+    print('values:', len(popular))
 
     # MIDDLE
-    print('\nMIDDLE\noriginal: ', len(MIDDLE))
-    MIDDLE = remove_talks_without_transcript(MIDDLE)
-    print('transcript:', len(MIDDLE))
-    MIDDLE = remove_talks_with_missing_values(MIDDLE)
-    print('values:', len(MIDDLE))
+    print('\nMIDDLE\noriginal: ', len(middle))
+    middle = remove_talks_without_transcript(middle)
+    print('transcript:', len(middle))
+    middle = remove_talks_with_missing_values(middle)
+    print('values:', len(middle))
 
     # UNPOPULAR
-    print('\nUNPOPUAR\noriginal: ', len(UNPOPULAR))
-    UNPOPULAR = remove_talks_without_transcript(UNPOPULAR)
-    print('transcript:', len(UNPOPULAR))
-    UNPOPULAR = remove_talks_with_missing_values(UNPOPULAR)
-    print('values:', len(UNPOPULAR))
+    print('\nUNPOPUAR\noriginal: ', len(unpopular))
+    unpopular = remove_talks_without_transcript(unpopular)
+    print('transcript:', len(unpopular))
+    unpopular = remove_talks_with_missing_values(unpopular)
+    print('values:', len(unpopular))
 
     # export to CSV without transcript
-    write_csv_without_transcript(CLEANED_POPULAR_CSV, POPULAR)
-    write_csv_without_transcript(CLEANED_MIDDLE_CSV, MIDDLE)
-    write_csv_without_transcript(CLEANED_UNPOPULAR_CSV, UNPOPULAR)
+    write_csv_without_transcript(CLEANED_POPULAR_CSV, popular)
+    write_csv_without_transcript(CLEANED_MIDDLE_CSV, middle)
+    write_csv_without_transcript(CLEANED_UNPOPULAR_CSV, unpopular)
 
     # export to pickle
-    write_pickle(CLEANED_POPULAR_PICKLE, POPULAR)
-    write_pickle(CLEANED_MIDDLE_PICKLE, MIDDLE)
-    write_pickle(CLEANED_UNPOPULAR_PICKLE, UNPOPULAR)
+    write_pickle(CLEANED_POPULAR_PICKLE, popular)
+    write_pickle(CLEANED_MIDDLE_PICKLE, middle)
+    write_pickle(CLEANED_UNPOPULAR_PICKLE, unpopular)
 
     print('\ncleaned popular:', len(process_pickle(CLEANED_POPULAR_PICKLE)))
     print('cleaned middle:', len(process_pickle(CLEANED_MIDDLE_PICKLE)))
     print('cleaned unpopular:', len(process_pickle(CLEANED_UNPOPULAR_PICKLE)))
 
+    return popular, middle, unpopular
+
+
+def reality_check(popular, middle, unpopular):
+    pass
+
+
+if __name__ == '__main__':
+    uncleaned_popular = process_pickle(POPULAR_PICKLE)
+    uncleaned_middle = process_pickle(MIDDLE_PICKLE)
+    uncleaned_unpopular = process_pickle(UNPOPULAR_PICKLE)
+
+    """ data cleaning """
+    cleaned_popular, cleaned_middle, cleaned_unpopular = data_clean(
+        uncleaned_popular, uncleaned_middle, uncleaned_unpopular)
+
     """ reality check """
+    reality_check(uncleaned_popular, uncleaned_middle, uncleaned_unpopular)
+    reality_check(cleaned_popular, cleaned_middle, cleaned_unpopular)
 
     # check for duplicates in crawling
 
