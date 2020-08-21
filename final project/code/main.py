@@ -1,4 +1,6 @@
 import TedTalk as Tt
+import AnalysisHandler as Ah
+import preprocessor
 from selenium import webdriver
 from selenium import common
 import time
@@ -11,13 +13,13 @@ import math
 TED_TALKS = []
 
 # tedTalks urls
-POPULAR_URLS = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/popular_urls.txt'
-UNPOPULAR_URLS = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/unpopular_urls.txt'
-MIDDLE_URLS = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/middle_urls.txt'
+POPULAR_URLS = 'output/popular_urls.txt'
+UNPOPULAR_URLS = 'output/unpopular_urls.txt'
+MIDDLE_URLS = 'output/middle_urls.txt'
 TEST_URL = 'https://www.ted.com/talks/bill_gates_how_the_pandemic_will_shape_the_near_future'
 
 # driver & csv format
-DRIVER_PATH = "C:/Users/Noa/Desktop/huji/second year/dataMining/final project/code/chromedriver.exe"
+DRIVER_PATH = "chromedriver.exe"
 CSV_COLUMNS = ["video_url", "title", "description", "length",
                "length_in_minutes", "views", "upload_date", "related_tags",
                "translations", "speaker_name", "speaker_profession",
@@ -25,10 +27,15 @@ CSV_COLUMNS = ["video_url", "title", "description", "length",
 driver = webdriver.Chrome(DRIVER_PATH)
 
 # pickle files
-POPULAR_PICKLE = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/popular_talks.p'
-MIDDLE_PICKLE = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/middle_talks.p'
-UNPOPULAR_PICKLE = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/unpopular_talks.p'
-TEST_PICKLE = 'C:/Users/Noa/Desktop/huji/second year/dataMining/final project/output/check.p'
+POPULAR_PICKLE = 'output/popular_talks.p'
+MIDDLE_PICKLE = 'output/middle_talks.p'
+UNPOPULAR_PICKLE = 'output/unpopular_talks.p'
+TEST_PICKLE = 'output/check.p'
+
+# Clean Pickle files ready for analysis
+TOP_CP = 'output/cleaned_popular_talks.p'
+MID_CP = 'output/cleaned_middle_talks.p'
+BOT_CP = 'output/cleaned_unpopular_talks.p'
 
 """ **************** cur settings ! **************** """
 # peek cur pickle & url file
@@ -62,9 +69,12 @@ def write_pickle():
 
     """ append to existing"""
     with open(CUR_PICKLE, 'ab') as fp:
+        # This:
         for data in TED_TALKS:
             pickle.dump(data, fp, protocol=pickle.HIGHEST_PROTOCOL)
 
+        # Should be this:
+        pickle.dump(TED_TALKS, fp, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 def create_talk(url):
@@ -268,32 +278,63 @@ def url_transcript_gen(video_url):
 
 
 if __name__ == "__main__":
-    start_time = time.time()
-    try:
-        with open(CUR_URL) as f:
-            talks_urls = f.read().splitlines()
+    # start_time = time.time()
+    # try:
+    #     with open(CUR_URL) as f:
+    #         talks_urls = f.read().splitlines()
+    #
+    #         # //
+    #         # batch = 30
+    #         # total_parts = math.ceil(len(talks_urls) / batch)
+    #         #
+    #         # for i in range(3, total_parts):
+    #         #     start = i * batch
+    #         #     end = start + batch
+    #         #     if end >= len(talks_urls):
+    #         #         end = -1
+    #         # //
+    #
+    #         for i, talk_url in enumerate(talks_urls[800:]):
+    #             print("--- %s seconds ---" % (time.time() - start_time))
+    #             print(str(i), " ", talk_url)
+    #             create_talk(talk_url)
+    #
+    # finally:
+    #     # write_csv()
+    #     write_pickle()
+    #     # time.sleep(15)
+    driver.quit()
 
-            # //
-            # batch = 30
-            # total_parts = math.ceil(len(talks_urls) / batch)
-            #
-            # for i in range(3, total_parts):
-            #     start = i * batch
-            #     end = start + batch
-            #     if end >= len(talks_urls):
-            #         end = -1
-            # //
+    pickle_in_1 = open(TOP_CP, "rb")
+    pickle_in_2 = open(MID_CP, "rb")
+    pickle_in_3 = open(BOT_CP, "rb")
+    top_list = preprocessor.process_pickle(TOP_CP)[:183]
+    mid_list = preprocessor.process_pickle(MID_CP)[:183]
+    bot_list = preprocessor.process_pickle(BOT_CP)
 
-            for i, talk_url in enumerate(talks_urls[800:]):
-                print("--- %s seconds ---" % (time.time() - start_time))
-                print(str(i), " ", talk_url)
-                create_talk(talk_url)
+    print(len(top_list), len(mid_list), len(bot_list))
+    talk_ah = Ah.AnalysisHandler(top_list, mid_list, bot_list)
+    print("***** ALL ANALYSIS *****")
+    talk_ah.load_stack("all")
+    talk_ah.init_analysis()
+    talk_ah.print_stats()
+    talk_ah.save_to_csv("layers_analyzed.csv")
+    print("***** TOP ANALYSIS *****")
+    talk_ah.load_stack("top")
+    talk_ah.init_analysis()
+    talk_ah.print_stats()
+    talk_ah.save_to_csv("layers_analyzed.csv")
+    print("***** MID ANALYSIS *****")
+    talk_ah.load_stack("mid")
+    talk_ah.init_analysis()
+    talk_ah.print_stats()
+    talk_ah.save_to_csv("layers_analyzed.csv")
+    print("***** BOT ANALYSIS *****")
+    talk_ah.load_stack("bot")
+    talk_ah.init_analysis()
+    talk_ah.print_stats()
+    talk_ah.save_to_csv("layers_analyzed.csv")
 
-    finally:
-        # write_csv()
-        write_pickle()
-        # time.sleep(15)
-        driver.quit()
 
 # --- test ---
 # create_talk(TEST_URL)
