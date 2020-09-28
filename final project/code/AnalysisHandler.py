@@ -1,4 +1,7 @@
 from collections import Counter
+from datetime import date
+import calendar
+
 import csv
 
 CSV_COLUMNS = ["layer", "reaction_counter", "avg_reaction_time", "avg_reaction_ratio", "avg_speaking_rate",
@@ -15,6 +18,8 @@ class AnalysisHandler:
         self.stack = []
         self.stack_mode = "all"
 
+        self.avg_talk_len = None
+        self.professions = []
         self.reaction_counter = []
         self.avg_reaction_time = None
         self.avg_reaction_ratio = None
@@ -26,6 +31,7 @@ class AnalysisHandler:
         self.avg_ques_type = {}
         self.avg_ratio_quality = None
         self.top_words = []
+        self.views_per_weekday = {}
 
     def filter_stack_by_tag(self, tag):
         """
@@ -75,6 +81,34 @@ class AnalysisHandler:
             # print()
 
     # Calculations
+    def count_professions(self):
+        professions = []
+        for talk in self.stack:
+            professions.append(talk.get_profession())
+        return Counter(professions)
+
+    def get_views_per_weekday(self):
+        # {"Weekday": ("total number of views", "total number of talks published that day")}
+        views_per_weekday = {"Sunday": [0, 0], "Monday": [0, 0], "Tuesday": [0, 0], "Wednesday": [0, 0],
+                             "Thursday": [0, 0], "Friday": [0, 0], "Saturday": [0, 0]}
+        for talk in self.stack:
+            date_st = talk.get_publication_date()
+            date_p = date_st.split("T")[0].split("-")
+            year, month, day = date_p
+            date_dt = date(int(year), int(month), int(day))
+            weekday = calendar.day_name[date_dt.weekday()]
+            views_per_weekday[weekday][0] += talk.get_num_of_views()
+            views_per_weekday[weekday][1] += 1
+        return views_per_weekday
+
+    def calc_avg_talk_length(self):
+        lengths = []
+        for talk in self.stack:
+            num_of_minutes = round(float(talk.get_legnth()))
+            lengths.append(num_of_minutes)
+        avg = sum(lengths) / len(lengths)
+        return round(avg, 1)
+
     def calc_reaction_counter(self):
         reaction_counter = {}
         for talk in self.stack:
@@ -164,14 +198,19 @@ class AnalysisHandler:
         self.avg_reaction_ratio = self.calc_avg_reaction_ratio()
         self.avg_speaking_rate = self.calc_avg_speaking_rate()
         self.avg_sen_len = self.calc_avg_sentence_len()
+        self.professions = self.count_professions()
         self.avg_ques_num = self.calc_avg_question_num()
         self.total_ques_asked = self.calc_total_questions_asked()
         self.total_ques_asked_by_type = self.calc_total_questions_asked_by_type()
         self.avg_ques_type = self.calc_avg_question_types()
         self.avg_ratio_quality = self.calc_avg_ratio_quality_questions()
-        self.top_words = self.get_top_words(20)
+        self.top_words = self.get_top_words(30)
+        self.avg_talk_len = self.calc_avg_talk_length()
+        self.views_per_weekday = self.get_views_per_weekday()
 
         print("****** Analysis Result ******")
+        print(f"Total profession count is: {self.professions}")
+        print(f"Average Talk Length: {self.avg_talk_len} minutes")
         print(f"Reaction Counter: {self.reaction_counter}")
         print(f"Average Reaction Time: Once every {self.avg_reaction_time} seconds")
         print(f"Average Reaction Ratio: {self.avg_reaction_ratio}")
@@ -183,6 +222,7 @@ class AnalysisHandler:
         print(f"Average Types Of Questions: {self.avg_ques_type}")
         print(f"Average Question Quality ratio: {self.avg_ratio_quality}")
         print(f"Top 20 Words: {self.top_words}")
+        print(f"Views Per Weekday Are: {self.views_per_weekday}")
 
     def save_to_csv(self, file_name):
         try:

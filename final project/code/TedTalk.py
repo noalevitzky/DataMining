@@ -57,6 +57,9 @@ class TedTalk:
         return dict((k, v) for k, v in self.__dict__.items() if k != 'full_transcript')
 
     # GETTERS
+    def get_legnth(self):
+        return self.length_in_minutes
+
     def get_words(self):
         return self.lemmatized_words
 
@@ -92,6 +95,15 @@ class TedTalk:
 
     def get_quality_question_ratio(self):
         return self.quality_question_ratio
+
+    def get_profession(self):
+        return self.speaker_profession
+
+    def get_num_of_views(self):
+        return int(self.views)
+
+    def get_publication_date(self):
+        return self.upload_date
 
     # Main handlers for this class
     def analyze(self):
